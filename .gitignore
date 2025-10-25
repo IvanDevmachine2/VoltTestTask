@@ -1,0 +1,22 @@
+## .gitignore для C#
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.pdb
+*.vshost.*
+packages/
+.vs/
+*.db
+*.db-shm
+*.db-wal
+appsettings.json
+
+## Временные файлы подписи сборки
+*.pfx
+*.snk
+*.key
+
+## Файлы публикации
+publish/
