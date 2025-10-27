@@ -16,10 +16,9 @@ namespace VoltTry2.Models.Repositories
         {
             var upperLetter = letter.ToString().ToUpper();
 
-            var allContacts = _dbSet.ToList();
-            return allContacts
-                .Where(c => !string.IsNullOrEmpty(c.LastName) &&
-                            c.LastName.ToUpper().StartsWith(upperLetter))
+            return _dbSet
+                .Where(c => c.LastName != null && c.LastName.ToUpper().StartsWith(upperLetter))
+                .AsEnumerable()
                 .Cast<IContact>();
         }
 
@@ -28,13 +27,14 @@ namespace VoltTry2.Models.Repositories
             if (string.IsNullOrWhiteSpace(searchTerm))
                 return GetAll();
 
-            var allContacts = _dbSet.ToList();
-            return allContacts.Where(c =>
-                (c.LastName != null && c.LastName.Contains(searchTerm)) ||
-                (c.FirstName != null && c.FirstName.Contains(searchTerm)) ||
-                (c.MiddleName != null && c.MiddleName.Contains(searchTerm)) ||
-                (c.PhoneNumber != null && c.PhoneNumber.Contains(searchTerm)) ||
-                (c.Email != null && c.Email.Contains(searchTerm)))
+            return _dbSet
+                .Where(c =>
+                    (c.LastName != null && c.LastName.Contains(searchTerm)) ||
+                    (c.FirstName != null && c.FirstName.Contains(searchTerm)) ||
+                    (c.MiddleName != null && c.MiddleName.Contains(searchTerm)) ||
+                    (c.PhoneNumber != null && c.PhoneNumber.Contains(searchTerm)) ||
+                    (c.Email != null && c.Email.Contains(searchTerm)))
+                .AsEnumerable()
                 .Cast<IContact>();
         }
 
@@ -42,12 +42,10 @@ namespace VoltTry2.Models.Repositories
         {
             var upperLetter = letter.ToString().ToUpper();
 
-            // Выгружаем все контакты в память и считаем
-            var allContacts = _dbSet.ToList();
-            return allContacts.Count(c =>
-                !string.IsNullOrEmpty(c.LastName) &&
-                c.LastName.Length > 0 &&
-                c.LastName.ToUpper()[0] == upperLetter[0]);
+            return _dbSet
+                .Count(c => c.LastName != null &&
+                           c.LastName.Length > 0 &&
+                           c.LastName.ToUpper().StartsWith(upperLetter));
         }
 
         public Dictionary<char, int> GetCountsByLetters()
@@ -55,15 +53,16 @@ namespace VoltTry2.Models.Repositories
             var counts = new Dictionary<char, int>();
             var alphabet = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
 
-            // Выгружаем все фамилии в память
-            var allContacts = _dbSet.ToList();
-            var lastNames = allContacts.Select(c => c.LastName).Where(name => !string.IsNullOrEmpty(name)).ToList();
+            var dbCounts = _dbSet
+                .Where(c => c.LastName != null && c.LastName.Length > 0)
+                .AsEnumerable()
+                .GroupBy(c => c.LastName.ToUpper()[0])
+                .ToDictionary(g => g.Key, g => g.Count());
 
             foreach (char letter in alphabet)
             {
-                var upperLetter = letter.ToString().ToUpper();
-                counts[letter] = lastNames.Count(name =>
-                    name.ToUpper()[0] == upperLetter[0]);
+                var upperLetter = char.ToUpper(letter);
+                counts[letter] = dbCounts.ContainsKey(upperLetter) ? dbCounts[upperLetter] : 0;
             }
 
             return counts;

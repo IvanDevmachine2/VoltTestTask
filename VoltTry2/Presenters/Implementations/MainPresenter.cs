@@ -46,7 +46,6 @@ namespace VoltTry2.Presenters.Implementations
             }
         }
 
-        //TODO: реализовать поиск контактов
         public void SearchContacts(string searchTerm)
         {
             try

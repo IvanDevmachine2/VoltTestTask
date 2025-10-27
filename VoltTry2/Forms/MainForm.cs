@@ -27,7 +27,6 @@ namespace VoltTry2.Forms
             set
             {
                 _presenter = value;
-
                 _presenter?.LoadContacts();
             }
         }
@@ -35,32 +34,52 @@ namespace VoltTry2.Forms
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            InitializeShowAllButton();
 
-            btnAdd.Click += (s, args) => AddContact();
-            btnDelete.Click += (s, args) => DeleteContact();
-        }
-
-        private void InitializeShowAllButton()
-        {
-            var btnShowAll = new Button
-            {
-                Location = new Point(230, 10),
-                Size = new Size(100, 30),
-                Text = "Показать все"
-            };
-
-            btnShowAll.Click += (s, e) =>
+            // Назначаем обработчики событий для кнопок
+            btnShowAll.Click += (s, args) =>
             {
                 if (_activeLetterLabel != null)
                 {
                     _activeLetterLabel.BackColor = Color.White;
                     _activeLetterLabel = null;
                 }
+                searchTextBox.Clear();
                 _presenter?.LoadContacts();
             };
 
-            this.Controls.Add(btnShowAll);
+            searchButton.Click += (s, args) => PerformSearch();
+
+            searchTextBox.KeyPress += (s, args) =>
+            {
+                if (args.KeyChar == (char)Keys.Enter)
+                {
+                    PerformSearch();
+                    args.Handled = true;
+                }
+            };
+
+            btnAdd.Click += (s, args) => AddContact();
+            btnDelete.Click += (s, args) => DeleteContact();
+        }
+
+        private void PerformSearch()
+        {
+            string searchTerm = searchTextBox.Text.Trim();
+
+            if (string.IsNullOrEmpty(searchTerm))
+            {
+                MessageBox.Show("Введите текст для поиска", "Информация",
+                              MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (_activeLetterLabel != null)
+            {
+                _activeLetterLabel.BackColor = Color.White;
+                _activeLetterLabel = null;
+            }
+
+            _presenter?.SearchContacts(searchTerm);
         }
 
         private void InitializeAlphabetLadder()
@@ -90,7 +109,7 @@ namespace VoltTry2.Forms
                     Padding = new Padding(0)
                 };
 
-                label.Click += (s, e) =>
+                label.Click += (s, args) =>
                 {
                     if (_activeLetterLabel != null)
                     {
@@ -99,6 +118,7 @@ namespace VoltTry2.Forms
 
                     label.BackColor = Color.LightGreen;
                     _activeLetterLabel = label;
+                    searchTextBox.Clear();
 
                     _presenter?.LoadContactsByLetter(letter);
                 };
@@ -220,8 +240,8 @@ namespace VoltTry2.Forms
             panel.Controls.Add(lblName);
             panel.Controls.Add(lblPhone);
 
-            panel.Click += (s, e) => SelectContactPanel(panel, contact);
-            panel.DoubleClick += (s, e) => EditContact(contact);
+            panel.Click += (s, args) => SelectContactPanel(panel, contact);
+            panel.DoubleClick += (s, args) => EditContact(contact);
 
             return panel;
         }
